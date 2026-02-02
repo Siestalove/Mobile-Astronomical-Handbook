@@ -1,5 +1,6 @@
 package com.example.astronicalhandbook.ui
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,21 +12,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Button
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.astronicalhandbook.data.News
+import com.example.astronicalhandbook.opengl.OpenGLActivity
 
 @Composable
 fun NewsScreen(viewModel: NewsViewModel = viewModel()) {
     val newsList by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.displayCutout)
-            .windowInsetsPadding(WindowInsets.systemBars)
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.displayCutout)
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(bottom = 60.dp) 
+        ) {
         Row(modifier = Modifier.weight(1f)) {
             Quadrant(news = newsList.getOrNull(0), onLikeClick = { viewModel.onLikeClicked(0) }, modifier = Modifier.weight(1f))
             Quadrant(news = newsList.getOrNull(1), onLikeClick = { viewModel.onLikeClicked(1) }, modifier = Modifier.weight(1f))
@@ -33,6 +40,19 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel()) {
         Row(modifier = Modifier.weight(1f)) {
             Quadrant(news = newsList.getOrNull(2), onLikeClick = { viewModel.onLikeClicked(2) }, modifier = Modifier.weight(1f))
             Quadrant(news = newsList.getOrNull(3), onLikeClick = { viewModel.onLikeClicked(3) }, modifier = Modifier.weight(1f))
+        }
+        }
+        
+        Button(
+            onClick = {
+                context.startActivity(Intent(context, OpenGLActivity::class.java))
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+        ) {
+            Text("К Заданию 2 (Куб)")
         }
     }
 }
