@@ -4,7 +4,6 @@ import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
-import android.os.SystemClock
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import com.example.astronicalhandbook.R
@@ -21,6 +20,10 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+        GLES20.glCullFace(GLES20.GL_BACK)
+
 
         background = Square()
         solarSystem = SolarSystem()
@@ -43,8 +46,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glDisable(GLES20.GL_BLEND)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
-        val time = SystemClock.uptimeMillis()
-        solarSystem.draw(vPMatrix, time)
+        solarSystem.draw(vPMatrix, System.nanoTime())
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {

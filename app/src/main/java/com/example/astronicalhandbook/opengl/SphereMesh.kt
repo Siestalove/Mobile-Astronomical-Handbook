@@ -1,0 +1,182 @@
+package com.example.astronicalhandbook.opengl
+
+import android.opengl.GLES20
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
+import java.nio.ShortBuffer
+import kotlin.math.cos
+import kotlin.math.sin
+
+class SphereMesh(
+    stacks: Int = 16,
+    slices: Int = 16
+) {
+
+    private val vertexBuffer: FloatBuffer
+    private val normalBuffer: FloatBuffer
+    private val indexBuffer: ShortBuffer
+    private val indexCount: Int
+
+    private val program: Int
+
+    private val aPosition: Int
+    private val aNormal: Int
+    private val uMVPMatrix: Int
+    private val uModelMatrix: Int
+    private val uColor: Int
+    private val uLightDir: Int
+
+    init {
+        val vertices = ArrayList<Float>()
+        val normals = ArrayList<Float>()
+        val indices = ArrayList<Short>()
+
+        for (i in 0..stacks) {
+            val phi = Math.PI * i / stacks
+            val y = cos(phi).toFloat()
+            val r = sin(phi).toFloat()
+
+            for (j in 0..slices) {
+                val theta = 2.0 * Math.PI * j / slices
+                val x = (r * cos(theta)).toFloat()
+                val z = (r * sin(theta)).toFloat()
+
+                vertices.add(x)
+                vertices.add(y)
+                vertices.add(z)
+
+                normals.add(x)
+                normals.add(y)
+                normals.add(z)
+            }
+        }
+
+        for (i in 0 until stacks) {
+            for (j in 0 until slices) {
+                val first = (i * (slices + 1) + j).toShort()
+                val second = (first + slices + 1).toShort()
+
+                indices.add(first)
+                indices.add(second)
+                indices.add((first + 1).toShort())
+
+                indices.add(second)
+                indices.add((second + 1).toShort())
+                indices.add((first + 1).toShort())
+            }
+        }
+
+        indexCount = indices.size
+
+        vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .apply {
+                put(vertices.toFloatArray())
+                position(0)
+            }
+
+        normalBuffer = ByteBuffer.allocateDirect(normals.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .apply {
+                put(normals.toFloatArray())
+                position(0)
+            }
+
+        indexBuffer = ByteBuffer.allocateDirect(indices.size * 2)
+            .order(ByteOrder.nativeOrder())
+            .asShortBuffer()
+            .apply {
+                put(indices.toShortArray())
+                position(0)
+            }
+
+        val vertexShader = ShaderUtils.loadShader(
+            GLES20.GL_VERTEX_SHADER, VERTEX_SHADER
+        )
+        val fragmentShader = ShaderUtils.loadShader(
+            GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER
+        )
+
+        program = GLES20.glCreateProgram().also {
+            GLES20.glAttachShader(it, vertexShader)
+            GLES20.glAttachShader(it, fragmentShader)
+            GLES20.glLinkProgram(it)
+        }
+
+        aPosition = GLES20.glGetAttribLocation(program, "aPosition")
+        aNormal = GLES20.glGetAttribLocation(program, "aNormal")
+        uMVPMatrix = GLES20.glGetUniformLocation(program, "uMVPMatrix")
+        uModelMatrix = GLES20.glGetUniformLocation(program, "uModelMatrix")
+        uColor = GLES20.glGetUniformLocation(program, "uColor")
+        uLightDir = GLES20.glGetUniformLocation(program, "uLightDir")
+    }
+
+    fun draw(
+        mvpMatrix: FloatArray,
+        modelMatrix: FloatArray,
+        color: FloatArray
+    ) {
+        GLES20.glUseProgram(program)
+
+        GLES20.glEnableVertexAttribArray(aPosition)
+        GLES20.glVertexAttribPointer(
+            aPosition, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer
+        )
+
+        GLES20.glEnableVertexAttribArray(aNormal)
+        GLES20.glVertexAttribPointer(
+            aNormal, 3, GLES20.GL_FLOAT, false, 0, normalBuffer
+        )
+
+        GLES20.glUniformMatrix4fv(uMVPMatrix, 1, false, mvpMatrix, 0)
+        GLES20.glUniformMatrix4fv(uModelMatrix, 1, false, modelMatrix, 0)
+        GLES20.glUniform4fv(uColor, 1, color, 0)
+
+        // Fixed light direction (world space)
+        GLES20.glUniform3f(uLightDir, 0.3f, 1.0f, 0.5f)
+
+        GLES20.glDrawElements(
+            GLES20.GL_TRIANGLES,
+            indexCount,
+            GLES20.GL_UNSIGNED_SHORT,
+            indexBuffer
+        )
+
+        GLES20.glDisableVertexAttribArray(aPosition)
+        GLES20.glDisableVertexAttribArray(aNormal)
+    }
+
+    companion object {
+        private const val VERTEX_SHADER = """
+            uniform mat4 uMVPMatrix;
+            uniform mat4 uModelMatrix;
+
+            attribute vec3 aPosition;
+            attribute vec3 aNormal;
+
+            varying vec3 vNormal;
+
+            void main() {
+                vNormal = mat3(uModelMatrix) * aNormal;
+                gl_Position = uMVPMatrix * vec4(aPosition, 1.0);
+            }
+        """
+
+        private const val FRAGMENT_SHADER = """
+            precision mediump float;
+
+            uniform vec4 uColor;
+            uniform vec3 uLightDir;
+
+            varying vec3 vNormal;
+
+            void main() {
+                float diff = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
+                gl_FragColor = vec4(uColor.rgb * diff, uColor.a);
+            }
+        """
+    }
+}
