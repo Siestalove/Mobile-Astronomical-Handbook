@@ -11,27 +11,26 @@ import com.example.astronicalhandbook.R
 
 class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
-    private lateinit var triangle: Square
-    private lateinit var cube: Cube
+    private lateinit var background: Square
+    private lateinit var solarSystem: SolarSystem
     private var textureId: Int = 0
 
     private val vPMatrix = FloatArray(16)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
-    private val rotationMatrix = FloatArray(16)
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        triangle = Square()
-        cube = Cube()
+        background = Square()
+        solarSystem = SolarSystem()
         textureId = ShaderUtils.loadTexture(context, R.drawable.galaxy_texture)
     }
 
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -6f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
+        Matrix.setLookAtM(viewMatrix, 0, 0f, 3f, -5f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
 
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
@@ -39,21 +38,13 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         
-        triangle.draw(textureId)
+        background.draw(textureId)
 
         GLES20.glDisable(GLES20.GL_BLEND)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
-        val scratch = FloatArray(16)
-        
-        Matrix.setIdentityM(rotationMatrix, 0)
-        
-        Matrix.rotateM(rotationMatrix, 0, 45f, 1.0f, 1.0f, 0.0f)
-
-        Matrix.multiplyMM(scratch, 0, vPMatrix, 0, rotationMatrix, 0)
-        
-        
-        cube.draw(scratch)
+        val time = SystemClock.uptimeMillis()
+        solarSystem.draw(vPMatrix, time)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -61,6 +52,6 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
         val ratio: Float = width.toFloat() / height.toFloat()
 
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 7f)
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 1f, 10f)
     }
 }

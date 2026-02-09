@@ -74,7 +74,6 @@ class Cube {
         20, 21, 22, 20, 22, 23  
     )
 
-    // Different shades of gray for each face to show depth
     private val colors = floatArrayOf(
         
         0.8f, 0.8f, 0.8f, 1.0f,

@@ -19,7 +19,7 @@ object ShaderUtils {
 
         if (textureHandle[0] != 0) {
             val options = BitmapFactory.Options()
-            options.inScaled = false // No pre-scaling
+            options.inScaled = false
 
             val bitmap = BitmapFactory.decodeResource(context.resources, resourceId, options)
 
