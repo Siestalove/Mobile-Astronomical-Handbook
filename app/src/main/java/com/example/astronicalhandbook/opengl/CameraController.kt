@@ -27,6 +27,7 @@ class CameraController {
 
             eyeX += (desiredX - eyeX) * deltaTime * 2f
             eyeZ += (desiredZ - eyeZ) * deltaTime * 2f
+            eyeY += (1.0f - eyeY) * deltaTime * 2f
             targetX += (target[0] - targetX) * deltaTime * 5f
             targetZ += (target[2] - targetZ) * deltaTime * 5f
         } else {
