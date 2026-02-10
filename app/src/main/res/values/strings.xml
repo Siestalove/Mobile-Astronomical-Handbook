@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AstronicalHandbook</string>
+    <string name="news_btn">К Новостям</string>
+    <string name="left_btn">L</string>
+    <string name="info_btn">i</string>
+    <string name="right_btn">R</string>
 </resources>

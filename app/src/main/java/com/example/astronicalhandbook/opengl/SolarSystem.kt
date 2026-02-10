@@ -1,20 +1,24 @@
 package com.example.astronicalhandbook.opengl
 
+import android.opengl.GLES20
 import android.opengl.Matrix
 import kotlin.math.cos
 import kotlin.math.sin
 
-private const val SYSTEM_SCALE = 1f
+private const val SYSTEM_SCALE = 1.8f
 private const val TWO_PI = (Math.PI * 2).toFloat()
+private const val SUN_RADIUS = 0.12f * SYSTEM_SCALE
 
 class SolarSystem {
-
+    enum class PlanetId {
+        SUN, MERCURY, VENUS, EARTH, MOON, MARS, JUPITER, SATURN, URANUS, NEPTUNE
+    }
+    private val planetPositions = mutableMapOf<PlanetId, FloatArray>()
     private val sphereMesh = SphereMesh(stacks = 16, slices = 16)
 
     private val modelMatrix = FloatArray(16)
     private val mvpMatrix = FloatArray(16)
 
-    private var lastTimeNs: Long = 0L
 
     private data class Planet(
         val radius: Float,
@@ -93,42 +97,34 @@ class SolarSystem {
         Planet(0.034f * SYSTEM_SCALE, 2.1f * SYSTEM_SCALE, 0.006f, floatArrayOf(0.3f, 0.5f, 1.0f, 1f))
     )
 
-    // ---------------- Main draw ----------------
+    fun draw(vpMatrix: FloatArray, deltaTime: Float) {
+        deltaTime.coerceAtMost(0.05f)
 
-    fun draw(vpMatrix: FloatArray, timeNs: Long) {
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        drawPlanet(PlanetId.SUN, sun, vpMatrix, 0f, 0f, 0f)
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
-        if (lastTimeNs == 0L) {
-            lastTimeNs = timeNs
-            return
-        }
-
-        var deltaTime = (timeNs - lastTimeNs) * 1e-9f
-        lastTimeNs = timeNs
-
-        deltaTime = deltaTime.coerceAtMost(0.05f)
-
-        drawPlanet(sun, vpMatrix, 0f, 0f, 0f)
-
-        drawOrbitingPlanet(mercuryState, vpMatrix, deltaTime)
-        drawOrbitingPlanet(venusState, vpMatrix, deltaTime)
+        drawOrbitingPlanet( PlanetId.MERCURY, mercuryState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.VENUS, venusState, vpMatrix, deltaTime)
 
         updateOrbit(earthState, deltaTime)
-        val ex = earthState.planet.orbitRadius * cos(earthState.angle)
-        val ez = earthState.planet.orbitRadius * sin(earthState.angle)
+        val r = SUN_RADIUS + earthState.planet.orbitRadius
+        val ex = r * cos(earthState.angle)
+        val ez = r * sin(earthState.angle)
 
-        drawPlanet(earthState.planet, vpMatrix, ex, 0f, ez)
+        drawPlanet(PlanetId.EARTH, earthState.planet, vpMatrix, ex, 0f, ez)
 
         updateOrbit(moonState, deltaTime)
         val mx = ex + moonState.planet.orbitRadius * cos(moonState.angle)
         val my = moonState.planet.orbitRadius * sin(moonState.angle)
 
-        drawPlanet(moonState.planet, vpMatrix, mx, my, ez)
+        drawPlanet(PlanetId.MOON, moonState.planet, vpMatrix, mx, my, ez)
 
-        drawOrbitingPlanet(marsState, vpMatrix, deltaTime)
-        drawOrbitingPlanet(jupiterState, vpMatrix, deltaTime)
-        drawOrbitingPlanet(saturnState, vpMatrix, deltaTime)
-        drawOrbitingPlanet(uranusState, vpMatrix, deltaTime)
-        drawOrbitingPlanet(neptuneState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.MARS, marsState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.JUPITER, jupiterState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.SATURN, saturnState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.URANUS, uranusState, vpMatrix, deltaTime)
+        drawOrbitingPlanet(PlanetId.NEPTUNE, neptuneState, vpMatrix, deltaTime)
     }
 
     private fun updateOrbit(state: PlanetState, deltaTime: Float) {
@@ -137,19 +133,22 @@ class SolarSystem {
     }
 
     private fun drawOrbitingPlanet(
+        planetId: PlanetId,
         state: PlanetState,
         vpMatrix: FloatArray,
         deltaTime: Float
     ) {
         updateOrbit(state, deltaTime)
 
-        val x = state.planet.orbitRadius * cos(state.angle)
-        val z = state.planet.orbitRadius * sin(state.angle)
+        val r = SUN_RADIUS + state.planet.orbitRadius
+        val x = r * cos(state.angle)
+        val z = r * sin(state.angle)
 
-        drawPlanet(state.planet, vpMatrix, x, 0f, z)
+        drawPlanet(planetId, state.planet, vpMatrix, x, 0f, z)
     }
 
     private fun drawPlanet(
+        currentPlanetId: PlanetId,
         planet: Planet,
         vpMatrix: FloatArray,
         x: Float,
@@ -162,10 +161,17 @@ class SolarSystem {
 
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, modelMatrix, 0)
 
+        val emissive = currentPlanetId == PlanetId.SUN
         sphereMesh.draw(
             mvpMatrix = mvpMatrix,
             modelMatrix = modelMatrix,
-            color = planet.color
+            color = planet.color,
+            emissive
         )
+        planetPositions[currentPlanetId] = floatArrayOf(x, y, z)
+    }
+
+    fun getPlanetPosition(selectedPlanet: PlanetId): FloatArray? {
+        return planetPositions[selectedPlanet]
     }
 }

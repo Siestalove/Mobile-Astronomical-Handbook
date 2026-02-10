@@ -26,6 +26,8 @@ class SphereMesh(
     private val uModelMatrix: Int
     private val uColor: Int
     private val uLightDir: Int
+    private val uEmissive: Int
+
 
     init {
         val vertices = ArrayList<Float>()
@@ -112,12 +114,14 @@ class SphereMesh(
         uModelMatrix = GLES20.glGetUniformLocation(program, "uModelMatrix")
         uColor = GLES20.glGetUniformLocation(program, "uColor")
         uLightDir = GLES20.glGetUniformLocation(program, "uLightDir")
+        uEmissive = GLES20.glGetUniformLocation(program, "uEmissive")
     }
 
     fun draw(
         mvpMatrix: FloatArray,
         modelMatrix: FloatArray,
-        color: FloatArray
+        color: FloatArray,
+        emissive: Boolean
     ) {
         GLES20.glUseProgram(program)
 
@@ -135,7 +139,6 @@ class SphereMesh(
         GLES20.glUniformMatrix4fv(uModelMatrix, 1, false, modelMatrix, 0)
         GLES20.glUniform4fv(uColor, 1, color, 0)
 
-        // Fixed light direction (world space)
         GLES20.glUniform3f(uLightDir, 0.3f, 1.0f, 0.5f)
 
         GLES20.glDrawElements(
@@ -147,6 +150,7 @@ class SphereMesh(
 
         GLES20.glDisableVertexAttribArray(aPosition)
         GLES20.glDisableVertexAttribArray(aNormal)
+        GLES20.glUniform1f(uEmissive, if (emissive) 1f else 0f)
     }
 
     companion object {
@@ -170,12 +174,17 @@ class SphereMesh(
 
             uniform vec4 uColor;
             uniform vec3 uLightDir;
+            uniform float uEmissive;
 
             varying vec3 vNormal;
 
             void main() {
-                float diff = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
-                gl_FragColor = vec4(uColor.rgb * diff, uColor.a);
+                if (uEmissive > 0.5) {
+                    gl_FragColor = uColor;
+                } else {
+                    float diff = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
+                    gl_FragColor = vec4(uColor.rgb * diff, uColor.a);
+                }
             }
         """
     }

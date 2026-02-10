@@ -4,20 +4,48 @@ import android.app.Activity
 import android.os.Bundle
 
 import android.widget.Button
+import android.widget.TextView
 import com.example.astronicalhandbook.R
 
 class OpenGLActivity : Activity() {
 
     private lateinit var gLView: MyGLSurfaceView
+    private lateinit var planetInfo: TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_opengl)
 
-        gLView = findViewById(com.example.astronicalhandbook.R.id.gl_surface_view)
-        
+        gLView = findViewById(R.id.gl_surface_view)
+
         findViewById<Button>(R.id.btn_back_to_news).setOnClickListener {
             finish()
         }
+
+        planetInfo = findViewById(R.id.planet_info)
+
+        findViewById<Button>(R.id.btn_left).setOnClickListener {
+            gLView.queueEvent {
+                gLView.renderer.selectPrevious()
+                val name = gLView.renderer.getSelectedPlanetName()
+                runOnUiThread { planetInfo.text = name }
+            }
+        }
+
+        findViewById<Button>(R.id.btn_right).setOnClickListener {
+            gLView.queueEvent {
+                gLView.renderer.selectNext()
+                val name = gLView.renderer.getSelectedPlanetName()
+                runOnUiThread { planetInfo.text = name }
+            }
+        }
+
+        findViewById<Button>(R.id.btn_info).setOnClickListener {
+            gLView.queueEvent {
+                gLView.renderer.toggleFocus()
+            }
+        }
+
     }
 }
