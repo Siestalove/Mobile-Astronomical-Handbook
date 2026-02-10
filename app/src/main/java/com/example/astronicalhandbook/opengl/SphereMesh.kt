@@ -140,6 +140,7 @@ class SphereMesh(
         GLES20.glUniform4fv(uColor, 1, color, 0)
 
         GLES20.glUniform3f(uLightDir, 0.3f, 1.0f, 0.5f)
+        GLES20.glUniform1f(uEmissive, if (emissive) 1f else 0f)
 
         GLES20.glDrawElements(
             GLES20.GL_TRIANGLES,
@@ -150,7 +151,6 @@ class SphereMesh(
 
         GLES20.glDisableVertexAttribArray(aPosition)
         GLES20.glDisableVertexAttribArray(aNormal)
-        GLES20.glUniform1f(uEmissive, if (emissive) 1f else 0f)
     }
 
     companion object {

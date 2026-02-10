@@ -77,7 +77,16 @@ class Cube {
             GLES20.glAttachShader(it, vertexShader)
             GLES20.glAttachShader(it, fragmentShader)
             GLES20.glLinkProgram(it)
+
+            val linkStatus = IntArray(1)
+            GLES20.glGetProgramiv(it, GLES20.GL_LINK_STATUS, linkStatus, 0)
+            if (linkStatus[0] == 0) {
+                val log = GLES20.glGetProgramInfoLog(it)
+                GLES20.glDeleteProgram(it)
+                throw RuntimeException("Failed to link cube program: $log")
+            }
         }
+
 
         aPosition = GLES20.glGetAttribLocation(program, "aPosition")
         uMVPMatrix = GLES20.glGetUniformLocation(program, "uMVPMatrix")

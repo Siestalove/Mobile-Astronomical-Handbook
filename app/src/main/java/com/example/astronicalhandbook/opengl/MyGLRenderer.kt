@@ -12,6 +12,8 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private lateinit var background: Square
     private lateinit var solarSystem: SolarSystem
+    private lateinit var selectionCube: SelectionCube
+
     private var textureId: Int = 0
     private var lastFrameTimeNs = 0L
 
@@ -23,19 +25,16 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private val camera = CameraController()
     private var selectedPlanetIndex = 0
     private val planets = SolarSystem.PlanetId.entries.toTypedArray()
-    private val selectionCube = SelectionCube()
-
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        GLES20.glEnable(GLES20.GL_CULL_FACE)
-        GLES20.glCullFace(GLES20.GL_BACK)
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
         background = Square()
         solarSystem = SolarSystem()
+        selectionCube = SelectionCube()
         textureId = ShaderUtils.loadTexture(context, R.drawable.galaxy_texture)
     }
 
@@ -46,30 +45,36 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         val deltaTime = (now - lastFrameTimeNs) * 1e-9f
         lastFrameTimeNs = now
 
-
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 3f, -5f, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
-
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
-
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-
         val selectedPlanet = planets[selectedPlanetIndex]
         val planetPos = solarSystem.getPlanetPosition(selectedPlanet)
 
         camera.update(planetPos, deltaTime)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, camera.getViewMatrix(), 0)
 
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         background.draw(textureId)
 
         GLES20.glDisable(GLES20.GL_BLEND)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-
         solarSystem.draw(vPMatrix, deltaTime)
 
-        planetPos?.let {
-            selectionCube.draw(vPMatrix, it, size = 0.15f)
+        val currentPlanetPos = solarSystem.getPlanetPosition(selectedPlanet)
+
+        currentPlanetPos?.let {
+            GLES20.glDepthMask(false)
+            GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+            GLES20.glEnable(GLES20.GL_BLEND)
+            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+
+            val radius = solarSystem.getPlanetRadius(selectedPlanet)
+            selectionCube.draw(
+                vPMatrix,
+                it,
+                size = radius * 3.6f
+            )
+            GLES20.glDepthMask(true)
         }
     }
 
@@ -78,7 +83,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
         val ratio: Float = width.toFloat() / height.toFloat()
 
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 1f, 10f)
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 1f, 100f)
     }
 
     fun selectNext() {

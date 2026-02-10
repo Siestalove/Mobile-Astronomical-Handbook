@@ -6,6 +6,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 private const val SYSTEM_SCALE = 1.8f
+private const val SPEED_SCALAR = 0.08f
 private const val TWO_PI = (Math.PI * 2).toFloat()
 private const val SUN_RADIUS = 0.12f * SYSTEM_SCALE
 
@@ -62,39 +63,39 @@ class SolarSystem {
     )
 
     private val mercuryState = PlanetState(
-        Planet(0.008f * SYSTEM_SCALE, 0.2f * SYSTEM_SCALE, 4.0f, floatArrayOf(0.6f, 0.6f, 0.6f, 1f))
+        Planet(0.008f * SYSTEM_SCALE, 0.2f * SYSTEM_SCALE, 4.0f* SPEED_SCALAR, floatArrayOf(0.6f, 0.6f, 0.6f, 1f))
     )
 
     private val venusState = PlanetState(
-        Planet(0.02f * SYSTEM_SCALE, 0.35f * SYSTEM_SCALE, 1.6f, floatArrayOf(0.9f, 0.7f, 0.4f, 1f))
+        Planet(0.02f * SYSTEM_SCALE, 0.35f * SYSTEM_SCALE, 1.6f* SPEED_SCALAR, floatArrayOf(0.9f, 0.7f, 0.4f, 1f))
     )
 
     private val earthState = PlanetState(
-        Planet(0.021f * SYSTEM_SCALE, 0.5f * SYSTEM_SCALE, 1.0f, floatArrayOf(0.2f, 0.5f, 1.0f, 1f))
+        Planet(0.021f * SYSTEM_SCALE, 0.5f * SYSTEM_SCALE, 1.0f* SPEED_SCALAR, floatArrayOf(0.2f, 0.5f, 1.0f, 1f))
     )
 
     private val moonState = PlanetState(
-        Planet(0.006f * SYSTEM_SCALE, 0.05f * SYSTEM_SCALE, 3.0f, floatArrayOf(0.8f, 0.8f, 0.8f, 1f))
+        Planet(0.006f * SYSTEM_SCALE, 0.05f * SYSTEM_SCALE, 3.0f* SPEED_SCALAR, floatArrayOf(0.8f, 0.8f, 0.8f, 1f))
     )
 
     private val marsState = PlanetState(
-        Planet(0.011f * SYSTEM_SCALE, 0.7f * SYSTEM_SCALE, 0.5f, floatArrayOf(0.9f, 0.3f, 0.1f, 1f))
+        Planet(0.011f * SYSTEM_SCALE, 0.7f * SYSTEM_SCALE, 0.5f* SPEED_SCALAR, floatArrayOf(0.9f, 0.3f, 0.1f, 1f))
     )
 
     private val jupiterState = PlanetState(
-        Planet(0.07f * SYSTEM_SCALE, 1.0f * SYSTEM_SCALE, 0.08f, floatArrayOf(0.8f, 0.6f, 0.4f, 1f))
+        Planet(0.07f * SYSTEM_SCALE, 1.0f * SYSTEM_SCALE, 0.08f* SPEED_SCALAR, floatArrayOf(0.8f, 0.6f, 0.4f, 1f))
     )
 
     private val saturnState = PlanetState(
-        Planet(0.06f * SYSTEM_SCALE, 1.4f * SYSTEM_SCALE, 0.03f, floatArrayOf(0.9f, 0.8f, 0.5f, 1f))
+        Planet(0.06f * SYSTEM_SCALE, 1.4f * SYSTEM_SCALE, 0.03f* SPEED_SCALAR, floatArrayOf(0.9f, 0.8f, 0.5f, 1f))
     )
 
     private val uranusState = PlanetState(
-        Planet(0.035f * SYSTEM_SCALE, 1.8f * SYSTEM_SCALE, 0.01f, floatArrayOf(0.6f, 0.9f, 0.9f, 1f))
+        Planet(0.035f * SYSTEM_SCALE, 1.8f * SYSTEM_SCALE, 0.01f* SPEED_SCALAR, floatArrayOf(0.6f, 0.9f, 0.9f, 1f))
     )
 
     private val neptuneState = PlanetState(
-        Planet(0.034f * SYSTEM_SCALE, 2.1f * SYSTEM_SCALE, 0.006f, floatArrayOf(0.3f, 0.5f, 1.0f, 1f))
+        Planet(0.034f * SYSTEM_SCALE, 2.1f * SYSTEM_SCALE, 0.006f* SPEED_SCALAR, floatArrayOf(0.3f, 0.5f, 1.0f, 1f))
     )
 
     fun draw(vpMatrix: FloatArray, deltaTime: Float) {
@@ -173,5 +174,20 @@ class SolarSystem {
 
     fun getPlanetPosition(selectedPlanet: PlanetId): FloatArray? {
         return planetPositions[selectedPlanet]
+    }
+
+    fun getPlanetRadius(id: PlanetId): Float {
+        return when (id) {
+            PlanetId.SUN -> sun.radius
+            PlanetId.MERCURY -> mercuryState.planet.radius
+            PlanetId.VENUS -> venusState.planet.radius
+            PlanetId.EARTH -> earthState.planet.radius
+            PlanetId.MOON -> moonState.planet.radius
+            PlanetId.MARS -> marsState.planet.radius
+            PlanetId.JUPITER -> jupiterState.planet.radius
+            PlanetId.SATURN -> saturnState.planet.radius
+            PlanetId.URANUS -> uranusState.planet.radius
+            PlanetId.NEPTUNE -> neptuneState.planet.radius
+        }
     }
 }
