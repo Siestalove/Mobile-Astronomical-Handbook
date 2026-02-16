@@ -23,7 +23,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
         background = Square()
-        solarSystem = SolarSystem()
+        solarSystem = SolarSystem(context)
         textureId = ShaderUtils.loadTexture(context, R.drawable.galaxy_texture)
     }
 
