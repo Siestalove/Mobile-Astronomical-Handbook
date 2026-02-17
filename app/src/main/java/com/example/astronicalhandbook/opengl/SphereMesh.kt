@@ -27,7 +27,7 @@ class SphereMesh(
     private val uMVPMatrix: Int
     private val uModelMatrix: Int
     private val uTexture: Int
-    private val uLightDir: Int
+    private val uLightPos: Int
     private val uEmissive: Int
 
 
@@ -130,14 +130,13 @@ class SphereMesh(
         uMVPMatrix = GLES20.glGetUniformLocation(program, "uMVPMatrix")
         uModelMatrix = GLES20.glGetUniformLocation(program, "uModelMatrix")
         uTexture = GLES20.glGetUniformLocation(program, "uTexture")
-        uLightDir = GLES20.glGetUniformLocation(program, "uLightDir")
+        uLightPos = GLES20.glGetUniformLocation(program, "uLightPos")
         uEmissive = GLES20.glGetUniformLocation(program, "uEmissive")
     }
 
     fun draw(
         mvpMatrix: FloatArray,
         modelMatrix: FloatArray,
-        color: FloatArray,
         textureId: Int,
         emissive: Boolean
     ) {
@@ -165,7 +164,7 @@ class SphereMesh(
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
         GLES20.glUniform1i(uTexture, 0)
 
-        GLES20.glUniform3f(uLightDir, 0.3f, 1.0f, 0.5f)
+        GLES20.glUniform3f(uLightPos, 0f, 1f, 0f)
         GLES20.glUniform1f(uEmissive, if (emissive) 1f else 0f)
 
         GLES20.glDrawElements(
@@ -184,38 +183,50 @@ class SphereMesh(
         private const val VERTEX_SHADER = """
             uniform mat4 uMVPMatrix;
             uniform mat4 uModelMatrix;
-
+            
             attribute vec3 aPosition;
             attribute vec3 aNormal;
             attribute vec2 aTexCoordinate;
-
+            
             varying vec3 vNormal;
+            varying vec3 vWorldPos;
             varying vec2 vTexCoordinate;
 
             void main() {
-                vNormal = mat3(uModelMatrix) * aNormal;
+                vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
                 gl_Position = uMVPMatrix * vec4(aPosition, 1.0);
+                vWorldPos = worldPos.xyz;
+                vNormal = mat3(uModelMatrix) * aNormal;
                 vTexCoordinate = aTexCoordinate;
             }
         """
-
         private const val FRAGMENT_SHADER = """
             precision mediump float;
-
+            
             uniform sampler2D uTexture;
-            uniform vec3 uLightDir;
+            uniform vec3 uLightPos;
             uniform float uEmissive;
-
+            
             varying vec3 vNormal;
+            varying vec3 vWorldPos;
             varying vec2 vTexCoordinate;
-
+            
             void main() {
-                float diff = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
-                
-                vec4 texColor = texture2D(uTexture, vTexCoordinate);
-                vec4 finalColor = vec4(texColor.rgb * diff, texColor.a) + vec4(uEmissive, uEmissive, uEmissive, 0.0);
-                gl_FragColor = finalColor;
+                vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
+            
+                vec3 color;
+                if (uEmissive > 0.5) {
+                    color = texColor;
+                } else {
+                    vec3 lightDir = normalize(uLightPos - vWorldPos);
+                    float diff = max(dot(normalize(vNormal), lightDir), 0.0);
+                    float ambient = 0.25;
+                    color = texColor * (ambient + diff);
+                }
+            
+                gl_FragColor = vec4(color, 1.0);
             }
         """
+
     }
 }

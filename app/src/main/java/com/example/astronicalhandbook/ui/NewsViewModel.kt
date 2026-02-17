@@ -19,8 +19,8 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<List<News>> = _uiState.asStateFlow()
     private val prefs = Prefs(application)
 
-    private val currentNews = Array<News?>(4) { null }
-    private val likedNews = HashSet<News?>()
+    private val currentNews: MutableList<News?> = MutableList(4) { null }
+    private val likedNews = HashSet<Int>()
 
     init {
         val initialIndices = (NewsRepository.newsList.indices).shuffled().take(4)
@@ -74,14 +74,14 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onLikeClicked(index: Int) {
-        if (currentNews[index] == null || likedNews.contains(currentNews[index]))
+        if (currentNews[index] == null || likedNews.contains(currentNews[index]?.id ?: 0))
             return
         if (index in 0 until 4) {
             currentNews[index]?.let {
                 val updatedNews = it.copy(likes = it.likes + 1)
                 prefs.saveLikes(updatedNews.id, updatedNews.likes)
                 currentNews[index] = updatedNews
-                likedNews.add(currentNews[index])
+                likedNews.add(currentNews[index]?.id ?: 0)
                 updateUiState()
             }
         }

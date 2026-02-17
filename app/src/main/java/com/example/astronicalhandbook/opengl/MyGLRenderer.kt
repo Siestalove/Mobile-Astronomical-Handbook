@@ -76,7 +76,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
             selectionCube.draw(
                 vPMatrix,
                 it,
-                size = radius * 3.6f
+                size = radius * 2.6f
             )
             GLES20.glDepthMask(true)
         }

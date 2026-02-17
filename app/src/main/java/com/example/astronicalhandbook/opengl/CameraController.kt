@@ -6,8 +6,8 @@ import kotlin.math.sqrt
 class CameraController {
     private val viewMatrix = FloatArray(16)
     private var eyeX = 0f
-    private var eyeY = 3f
-    private var eyeZ = -6f
+    private var eyeY = 10f
+    private var eyeZ = -16f
 
     private var targetX = 0f
     private var targetY = 0f
@@ -17,7 +17,7 @@ class CameraController {
 
     fun update(target: FloatArray?, deltaTime: Float) {
         if (followPlanet && target != null) {
-            val followDistance = 1.6f
+            val followDistance = 2.6f
             val dx = eyeX - target[0]
             val dz = eyeZ - target[2]
             val len = sqrt(dx * dx + dz * dz).coerceAtLeast(0.001f)
@@ -32,8 +32,8 @@ class CameraController {
             targetZ += (target[2] - targetZ) * deltaTime * 5f
         } else {
             val defaultEyeX = 0f
-            val defaultEyeY = 3f
-            val defaultEyeZ = -6f
+            val defaultEyeY = 10f
+            val defaultEyeZ = -16f
             val defaultTargetX = 0f
             val defaultTargetY = 0f
             val defaultTargetZ = 0f

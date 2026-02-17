@@ -4,18 +4,20 @@ import android.content.Context
 import android.opengl.GLES20
 import android.opengl.Matrix
 import com.example.astronicalhandbook.R
+import com.example.astronicalhandbook.opengl.SolarSystem.Planet
 import kotlin.math.cos
 import kotlin.math.sin
 
-private const val SYSTEM_SCALE = 3f
-private const val SPEED_SCALAR = 0.08f
+private const val SYSTEM_SCALE = 12f
+private const val SPEED_SCALAR = 0.18f
 private const val TWO_PI = (Math.PI * 2).toFloat()
-private const val SUN_RADIUS = 0.12f * SYSTEM_SCALE
+private const val SUN_RADIUS = 0.006f * SYSTEM_SCALE
 
 class SolarSystem(context: Context) {
     enum class PlanetId {
         SUN, MERCURY, VENUS, EARTH, MOON, MARS, JUPITER, SATURN, URANUS, NEPTUNE
     }
+    private val planetPositions = mutableMapOf<PlanetId, FloatArray>()
     private val sphereMesh = SphereMesh(stacks = 16, slices = 16)
 
     private val modelMatrix = FloatArray(16)
@@ -31,7 +33,8 @@ class SolarSystem(context: Context) {
 
     private data class PlanetState(
         val planet: Planet,
-        var angle: Float = 0f
+        var angle: Float = 0f,
+        var innerAngle: Float = 0f
     )
 
     private val sunTexture = ShaderUtils.loadTexture(context, R.drawable.sun_texture)
@@ -45,13 +48,11 @@ class SolarSystem(context: Context) {
     private val uranusTexture = ShaderUtils.loadTexture(context, R.drawable.uranus_texture)
     private val neptuneTexture = ShaderUtils.loadTexture(context, R.drawable.neptune_texture)
 
-    private val sun = Planet(
-        radius = 0.12f * SYSTEM_SCALE,
-        orbitRadius = 0f,
-        orbitSpeed = 0f,
-        textureId = sunTexture
-    )
 
+
+    private val sunState = PlanetState(
+        Planet(radius = 0.12f * SYSTEM_SCALE, orbitRadius = 0f, orbitSpeed = 0f, textureId = sunTexture)
+    )
     private val mercuryState = PlanetState(
         Planet(0.008f * SYSTEM_SCALE, 0.2f * SYSTEM_SCALE, 4.0f * SPEED_SCALAR, mercuryTexture)
     )
@@ -92,7 +93,7 @@ class SolarSystem(context: Context) {
         deltaTime.coerceAtMost(0.05f)
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        drawPlanet(PlanetId.SUN, sun, vpMatrix, 0f, 0f, 0f)
+        drawPlanet(PlanetId.SUN, sunState, vpMatrix, 0f, 0f, 0f, deltaTime)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
         drawOrbitingPlanet( PlanetId.MERCURY, mercuryState, vpMatrix, deltaTime)
@@ -103,13 +104,13 @@ class SolarSystem(context: Context) {
         val ex = r * cos(earthState.angle)
         val ez = r * sin(earthState.angle)
 
-        drawPlanet(PlanetId.EARTH, earthState.planet, vpMatrix, ex, 0f, ez)
+        drawPlanet(PlanetId.EARTH, earthState, vpMatrix, ex, 0f, ez, deltaTime)
 
         updateOrbit(moonState, deltaTime)
         val mx = ex + moonState.planet.orbitRadius * cos(moonState.angle)
         val my = moonState.planet.orbitRadius * sin(moonState.angle)
 
-        drawPlanet(PlanetId.MOON, moonState.planet, vpMatrix, mx, my, ez)
+        drawPlanet(PlanetId.MOON, moonState, vpMatrix, mx, my, ez, deltaTime)
 
         drawOrbitingPlanet(PlanetId.MARS, marsState, vpMatrix, deltaTime)
         drawOrbitingPlanet(PlanetId.JUPITER, jupiterState, vpMatrix, deltaTime)
@@ -135,20 +136,26 @@ class SolarSystem(context: Context) {
         val x = r * cos(state.angle)
         val z = r * sin(state.angle)
 
-        drawPlanet(planetId, state.planet, vpMatrix, x, 0f, z)
+        drawPlanet(planetId, state, vpMatrix, x, 0f, z, deltaTime)
     }
 
     private fun drawPlanet(
         currentPlanetId: PlanetId,
-        planet: Planet,
+        state: PlanetState,
         vpMatrix: FloatArray,
         x: Float,
         y: Float,
-        z: Float
+        z: Float,
+        deltaTime: Float
     ) {
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, x, y, z)
-        Matrix.scaleM(modelMatrix, 0, planet.radius, planet.radius, planet.radius)
+        state.let {
+            it.innerAngle += 0.05f * deltaTime * 360f
+            Matrix.rotateM(modelMatrix, 0, it.innerAngle, 0f, 1f, 1f)
+        }
+
+        Matrix.scaleM(modelMatrix, 0, state.planet.radius, state.planet.radius, state.planet.radius)
 
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, modelMatrix, 0)
 
@@ -156,7 +163,7 @@ class SolarSystem(context: Context) {
         sphereMesh.draw(
             mvpMatrix = mvpMatrix,
             modelMatrix = modelMatrix,
-            textureId = planet.textureId,
+            textureId = state.planet.textureId,
             emissive
         )
         planetPositions[currentPlanetId] = floatArrayOf(x, y, z)
@@ -168,7 +175,7 @@ class SolarSystem(context: Context) {
 
     fun getPlanetRadius(id: PlanetId): Float {
         return when (id) {
-            PlanetId.SUN -> sun.radius
+            PlanetId.SUN -> sunState.planet.radius
             PlanetId.MERCURY -> mercuryState.planet.radius
             PlanetId.VENUS -> venusState.planet.radius
             PlanetId.EARTH -> earthState.planet.radius
