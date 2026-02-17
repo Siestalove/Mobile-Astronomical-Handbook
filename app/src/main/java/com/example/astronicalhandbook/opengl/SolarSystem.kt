@@ -1,20 +1,21 @@
 package com.example.astronicalhandbook.opengl
 
+import android.content.Context
 import android.opengl.GLES20
 import android.opengl.Matrix
+import com.example.astronicalhandbook.R
 import kotlin.math.cos
 import kotlin.math.sin
 
-private const val SYSTEM_SCALE = 1.8f
+private const val SYSTEM_SCALE = 3f
 private const val SPEED_SCALAR = 0.08f
 private const val TWO_PI = (Math.PI * 2).toFloat()
 private const val SUN_RADIUS = 0.12f * SYSTEM_SCALE
 
-class SolarSystem {
+class SolarSystem(context: Context) {
     enum class PlanetId {
         SUN, MERCURY, VENUS, EARTH, MOON, MARS, JUPITER, SATURN, URANUS, NEPTUNE
     }
-    private val planetPositions = mutableMapOf<PlanetId, FloatArray>()
     private val sphereMesh = SphereMesh(stacks = 16, slices = 16)
 
     private val modelMatrix = FloatArray(16)
@@ -25,77 +26,66 @@ class SolarSystem {
         val radius: Float,
         val orbitRadius: Float,
         val orbitSpeed: Float,
-        val color: FloatArray
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Planet
-
-            if (radius != other.radius) return false
-            if (orbitRadius != other.orbitRadius) return false
-            if (orbitSpeed != other.orbitSpeed) return false
-            if (!color.contentEquals(other.color)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = radius.hashCode()
-            result = 31 * result + orbitRadius.hashCode()
-            result = 31 * result + orbitSpeed.hashCode()
-            result = 31 * result + color.contentHashCode()
-            return result
-        }
-    }
+        val textureId: Int
+    )
 
     private data class PlanetState(
         val planet: Planet,
         var angle: Float = 0f
     )
 
+    private val sunTexture = ShaderUtils.loadTexture(context, R.drawable.sun_texture)
+    private val mercuryTexture = ShaderUtils.loadTexture(context, R.drawable.mercury_texture)
+    private val venusTexture = ShaderUtils.loadTexture(context, R.drawable.venus_texture)
+    private val earthTexture = ShaderUtils.loadTexture(context, R.drawable.earth_texture)
+    private val moonTexture = ShaderUtils.loadTexture(context, R.drawable.moon_texture)
+    private val marsTexture = ShaderUtils.loadTexture(context, R.drawable.mars_texture)
+    private val jupiterTexture = ShaderUtils.loadTexture(context, R.drawable.jupiter_texture)
+    private val saturnTexture = ShaderUtils.loadTexture(context, R.drawable.saturn_texture)
+    private val uranusTexture = ShaderUtils.loadTexture(context, R.drawable.uranus_texture)
+    private val neptuneTexture = ShaderUtils.loadTexture(context, R.drawable.neptune_texture)
+
     private val sun = Planet(
         radius = 0.12f * SYSTEM_SCALE,
         orbitRadius = 0f,
         orbitSpeed = 0f,
-        color = floatArrayOf(1.0f, 0.9f, 0.0f, 1.0f)
+        textureId = sunTexture
     )
 
     private val mercuryState = PlanetState(
-        Planet(0.008f * SYSTEM_SCALE, 0.2f * SYSTEM_SCALE, 4.0f* SPEED_SCALAR, floatArrayOf(0.6f, 0.6f, 0.6f, 1f))
+        Planet(0.008f * SYSTEM_SCALE, 0.2f * SYSTEM_SCALE, 4.0f * SPEED_SCALAR, mercuryTexture)
     )
 
     private val venusState = PlanetState(
-        Planet(0.02f * SYSTEM_SCALE, 0.35f * SYSTEM_SCALE, 1.6f* SPEED_SCALAR, floatArrayOf(0.9f, 0.7f, 0.4f, 1f))
+        Planet(0.02f * SYSTEM_SCALE, 0.35f * SYSTEM_SCALE, 1.6f * SPEED_SCALAR, venusTexture)
     )
 
     private val earthState = PlanetState(
-        Planet(0.021f * SYSTEM_SCALE, 0.5f * SYSTEM_SCALE, 1.0f* SPEED_SCALAR, floatArrayOf(0.2f, 0.5f, 1.0f, 1f))
+        Planet(0.021f * SYSTEM_SCALE, 0.5f * SYSTEM_SCALE, 1.0f * SPEED_SCALAR, earthTexture)
     )
 
     private val moonState = PlanetState(
-        Planet(0.006f * SYSTEM_SCALE, 0.05f * SYSTEM_SCALE, 3.0f* SPEED_SCALAR, floatArrayOf(0.8f, 0.8f, 0.8f, 1f))
+        Planet(0.006f * SYSTEM_SCALE, 0.05f * SYSTEM_SCALE, 3.0f * SPEED_SCALAR, moonTexture)
     )
 
     private val marsState = PlanetState(
-        Planet(0.011f * SYSTEM_SCALE, 0.7f * SYSTEM_SCALE, 0.5f* SPEED_SCALAR, floatArrayOf(0.9f, 0.3f, 0.1f, 1f))
+        Planet(0.011f * SYSTEM_SCALE, 0.7f * SYSTEM_SCALE, 0.5f * SPEED_SCALAR, marsTexture)
     )
 
     private val jupiterState = PlanetState(
-        Planet(0.07f * SYSTEM_SCALE, 1.0f * SYSTEM_SCALE, 0.08f* SPEED_SCALAR, floatArrayOf(0.8f, 0.6f, 0.4f, 1f))
+        Planet(0.07f * SYSTEM_SCALE, 1.0f * SYSTEM_SCALE, 0.08f * SPEED_SCALAR, jupiterTexture)
     )
 
     private val saturnState = PlanetState(
-        Planet(0.06f * SYSTEM_SCALE, 1.4f * SYSTEM_SCALE, 0.03f* SPEED_SCALAR, floatArrayOf(0.9f, 0.8f, 0.5f, 1f))
+        Planet(0.06f * SYSTEM_SCALE, 1.4f * SYSTEM_SCALE, 0.03f * SPEED_SCALAR, saturnTexture)
     )
 
     private val uranusState = PlanetState(
-        Planet(0.035f * SYSTEM_SCALE, 1.8f * SYSTEM_SCALE, 0.01f* SPEED_SCALAR, floatArrayOf(0.6f, 0.9f, 0.9f, 1f))
+        Planet(0.035f * SYSTEM_SCALE, 1.8f * SYSTEM_SCALE, 0.01f * SPEED_SCALAR, uranusTexture)
     )
 
     private val neptuneState = PlanetState(
-        Planet(0.034f * SYSTEM_SCALE, 2.1f * SYSTEM_SCALE, 0.006f* SPEED_SCALAR, floatArrayOf(0.3f, 0.5f, 1.0f, 1f))
+        Planet(0.034f * SYSTEM_SCALE, 2.1f * SYSTEM_SCALE, 0.006f * SPEED_SCALAR, neptuneTexture)
     )
 
     fun draw(vpMatrix: FloatArray, deltaTime: Float) {
@@ -166,7 +156,7 @@ class SolarSystem {
         sphereMesh.draw(
             mvpMatrix = mvpMatrix,
             modelMatrix = modelMatrix,
-            color = planet.color,
+            textureId = planet.textureId,
             emissive
         )
         planetPositions[currentPlanetId] = floatArrayOf(x, y, z)

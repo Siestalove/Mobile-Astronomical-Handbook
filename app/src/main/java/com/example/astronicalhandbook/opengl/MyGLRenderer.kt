@@ -31,9 +31,12 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+        GLES20.glCullFace(GLES20.GL_BACK)
+
 
         background = Square()
-        solarSystem = SolarSystem()
+        solarSystem = SolarSystem(context)
         selectionCube = SelectionCube()
         textureId = ShaderUtils.loadTexture(context, R.drawable.galaxy_texture)
     }
@@ -54,6 +57,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        
         background.draw(textureId)
 
         GLES20.glDisable(GLES20.GL_BLEND)
