@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AstronicalHandbook">
         <activity
+            android:name=".opengl.MoonPhongActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AstronicalHandbook"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+
+        <activity
             android:name=".opengl.OpenGLActivity"
             android:exported="false"
             android:theme="@style/Theme.AstronicalHandbook"
