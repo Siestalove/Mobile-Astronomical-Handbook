@@ -41,6 +41,14 @@ class OpenGLActivity : Activity() {
             }
         }
 
+        findViewById<Button>(R.id.btn_focus).setOnClickListener {
+            gLView.queueEvent {
+                runOnUiThread {
+                    gLView.renderer.toggleFocus()
+                }
+            }
+        }
+
         findViewById<Button>(R.id.btn_info).setOnClickListener {
             gLView.queueEvent {
                 val name = gLView.renderer.getSelectedPlanetName()
@@ -48,8 +56,6 @@ class OpenGLActivity : Activity() {
                     if (name == "MOON") {
                         val intent = android.content.Intent(this@OpenGLActivity, MoonPhongActivity::class.java)
                         startActivity(intent)
-                    } else {
-                        gLView.renderer.toggleFocus()
                     }
                 }
             }

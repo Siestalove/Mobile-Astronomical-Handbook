@@ -4,4 +4,5 @@
     <string name="left_btn">L</string>
     <string name="info_btn">i</string>
     <string name="right_btn">R</string>
+    <string name="focus">Фокус</string>
 </resources>
