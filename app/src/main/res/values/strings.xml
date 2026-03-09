@@ -27,4 +27,7 @@
     <string name="planet_desc_saturn">Сатурн — шестая планета от Солнца и вторая по размерам в Солнечной системе после Юпитера.</string>
     <string name="planet_desc_uranus">Уран — планета Солнечной системы, седьмая по удалённости от Солнца и третья по диаметру.</string>
     <string name="planet_desc_neptune">Нептун — восьмая и самая дальняя от Земли планета Солнечной системы.</string>
+    <string name="hide_Info_btn">Скрыть инфо</string>
+    <string name="show_fong_btn">Показать Фонга</string>
+    <string name="image_of_the_selected_planet">image of the selected planet</string>
 </resources>

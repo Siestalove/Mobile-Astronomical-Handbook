@@ -6,9 +6,9 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import com.example.astronicalhandbook.R
+import androidx.core.view.isVisible
 
 class OpenGLActivity : Activity() {
-
     private lateinit var gLView: MyGLSurfaceView
     private lateinit var planetInfo: TextView
     private lateinit var planetDesc: TextView
@@ -27,16 +27,6 @@ class OpenGLActivity : Activity() {
 
         findViewById<Button>(R.id.btn_back_to_news).setOnClickListener {
             finish()
-        }
-
-        findViewById<Button>(R.id.btn_toggle_info).setOnClickListener {
-            if (cardPlanetInfo.visibility == android.view.View.VISIBLE) {
-                cardPlanetInfo.visibility = android.view.View.GONE
-                (it as Button).text = getString(R.string.toggle_info_btn)
-            } else {
-                cardPlanetInfo.visibility = android.view.View.VISIBLE
-                (it as Button).text = "Скрыть инфо"
-            }
         }
 
         findViewById<Button>(R.id.btn_left).setOnClickListener {
@@ -67,10 +57,17 @@ class OpenGLActivity : Activity() {
             gLView.queueEvent {
                 val name = gLView.renderer.getSelectedPlanetName()
                 runOnUiThread {
-                    if (name == "MOON") {
-                        val intent = android.content.Intent(this@OpenGLActivity, MoonPhongActivity::class.java)
-                        startActivity(intent)
+                    if (cardPlanetInfo.isVisible) {
+                        cardPlanetInfo.visibility = android.view.View.GONE
+                    } else {
+                        if (name == "MOON") {
+                            val intent = android.content.Intent(this@OpenGLActivity, MoonPhongActivity::class.java)
+                            startActivity(intent)
+                        } else {
+                            cardPlanetInfo.visibility = android.view.View.VISIBLE
+                        }
                     }
+                    (it as Button).text = getInfoButtonText(name)
                 }
             }
         }
@@ -100,5 +97,15 @@ class OpenGLActivity : Activity() {
         planetInfo.setText(nameRes)
         planetDesc.setText(descRes)
         planetImage.setImageResource(imageRes)
+        findViewById<Button>(R.id.btn_info).text = getInfoButtonText(planetName)
+    }
+
+    private fun getInfoButtonText(planetName: String) : String {
+        return if (planetName == "MOON" && !cardPlanetInfo.isVisible)
+            getString(R.string.show_fong_btn)
+        else if (cardPlanetInfo.isVisible)
+            getString(R.string.hide_Info_btn)
+        else
+            getString(R.string.info_btn)
     }
 }
