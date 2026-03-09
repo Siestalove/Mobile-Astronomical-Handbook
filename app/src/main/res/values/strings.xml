@@ -1,7 +1,32 @@
 <resources>
     <string name="app_name">AstronicalHandbook</string>
     <string name="news_btn">К Новостям</string>
-    <string name="left_btn">L</string>
+    <string name="left_btn">←</string>
     <string name="info_btn">i</string>
-    <string name="right_btn">R</string>
+    <string name="right_btn">→</string>
+    <string name="toggle_info_btn">Показать инфо</string>
+
+    <!-- Planet Names -->
+    <string name="planet_name_sun">Солнце</string>
+    <string name="planet_name_mercury">Меркурий</string>
+    <string name="planet_name_venus">Венера</string>
+    <string name="planet_name_earth">Земля</string>
+    <string name="planet_name_moon">Луна</string>
+    <string name="planet_name_mars">Марс</string>
+    <string name="planet_name_jupiter">Юпитер</string>
+    <string name="planet_name_saturn">Сатурн</string>
+    <string name="planet_name_uranus">Уран</string>
+    <string name="planet_name_neptune">Нептун</string>
+
+    <!-- Planet Descriptions -->
+    <string name="planet_desc_sun">Солнце — единственная звезда Солнечной системы, вокруг которой обращаются другие объекты этой системы.</string>
+    <string name="planet_desc_mercury">Меркурий — наименьшая планета Солнечной системы и самая близкая к Солнцу. Не имеет спутников.</string>
+    <string name="planet_desc_venus">Венера — вторая по удалённости от Солнца планета Солнечной системы. Имеет плотную атмосферу.</string>
+    <string name="planet_desc_earth">Земля — третья по удалённости от Солнца планета. Самая плотная, пятая по диаметру и массе.</string>
+    <string name="planet_desc_moon">Луна — единственный естественный спутник Земли. Второй по яркости объект на земном небосводе.</string>
+    <string name="planet_desc_mars">Марс — четвёртая по удалённости от Солнца и седьмая по размеру планета Солнечной системы.</string>
+    <string name="planet_desc_jupiter">Юпитер — крупнейшая планета Солнечной системы, газовый гигант.</string>
+    <string name="planet_desc_saturn">Сатурн — шестая планета от Солнца и вторая по размерам в Солнечной системе после Юпитера.</string>
+    <string name="planet_desc_uranus">Уран — планета Солнечной системы, седьмая по удалённости от Солнца и третья по диаметру.</string>
+    <string name="planet_desc_neptune">Нептун — восьмая и самая дальняя от Земли планета Солнечной системы.</string>
 </resources>
