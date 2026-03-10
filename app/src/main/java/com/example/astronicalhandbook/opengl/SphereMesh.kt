@@ -181,52 +181,89 @@ class SphereMesh(
 
     companion object {
         private const val VERTEX_SHADER = """
-            uniform mat4 uMVPMatrix;
-            uniform mat4 uModelMatrix;
-            
-            attribute vec3 aPosition;
-            attribute vec3 aNormal;
-            attribute vec2 aTexCoordinate;
-            
-            varying vec3 vNormal;
-            varying vec3 vWorldPos;
-            varying vec2 vTexCoordinate;
+    uniform mat4 uMVPMatrix;
+    uniform mat4 uModelMatrix;
+    uniform float uTime;
+    
+    attribute vec3 aPosition;
+    attribute vec3 aNormal;
+    attribute vec2 aTexCoordinate;
+    
+    varying vec3 vNormal;
+    varying vec3 vWorldPos;
+    varying vec2 vTexCoordinate;
+    varying float vTime;
 
-            void main() {
-                vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
-                gl_Position = uMVPMatrix * vec4(aPosition, 1.0);
-                vWorldPos = worldPos.xyz;
-                vNormal = mat3(uModelMatrix) * aNormal;
-                vTexCoordinate = aTexCoordinate;
-            }
-        """
+    void main() {
+        vec4 worldPos = uModelMatrix * vec4(aPosition, 1.0);
+        gl_Position = uMVPMatrix * vec4(aPosition, 1.0);
+        vWorldPos = worldPos.xyz;
+        vNormal = mat3(uModelMatrix) * aNormal;
+        vTexCoordinate = aTexCoordinate;
+        vTime = uTime;
+    }
+"""
+
         private const val FRAGMENT_SHADER = """
-            precision mediump float;
+    precision mediump float;
+    
+    uniform sampler2D uTexture;
+    uniform vec3 uLightPos;
+    uniform float uEmissive;
+    uniform float uWater;
+    
+    varying vec3 vNormal;
+    varying vec3 vWorldPos;
+    varying vec2 vTexCoordinate;
+    varying float vTime;
+    
+    float wave(vec2 uv, float speed, float freq, float amp) {
+        return sin(uv.x * freq + vTime * speed) * 
+               cos(uv.y * freq * 0.7 + vTime * speed * 0.8) * amp;
+    }
+    
+    void main() {
+        vec3 color;
+    
+        if (uWater > 0.5) {
+            vec2 uv = vTexCoordinate;
             
-            uniform sampler2D uTexture;
-            uniform vec3 uLightPos;
-            uniform float uEmissive;
+            float w  = wave(uv, 1.2, 8.0,  0.04);
+                  w += wave(uv, 0.7, 14.0, 0.025);
+                  w += wave(uv, 1.8, 20.0, 0.015);
+                  w += wave(uv, 0.4, 5.0,  0.05);
             
-            varying vec3 vNormal;
-            varying vec3 vWorldPos;
-            varying vec2 vTexCoordinate;
+            vec3 deepBlue  = vec3(0.05, 0.10, 0.45);
+            vec3 lightBlue = vec3(0.20, 0.45, 0.85);
+            vec3 foam      = vec3(0.70, 0.80, 1.00);
             
-            void main() {
-                vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
+            float t = clamp(w * 8.0 + 0.5, 0.0, 1.0);
+            vec3 waterColor = mix(deepBlue, lightBlue, t);
+            waterColor = mix(waterColor, foam, clamp((w - 0.04) * 15.0, 0.0, 1.0));
             
-                vec3 color;
-                if (uEmissive > 0.5) {
-                    color = texColor;
-                } else {
-                    vec3 lightDir = normalize(uLightPos - vWorldPos);
-                    float diff = max(dot(normalize(vNormal), lightDir), 0.0);
-                    float ambient = 0.25;
-                    color = texColor * (ambient + diff);
-                }
+            vec3 lightDir = normalize(uLightPos - vWorldPos);
+            float diff = max(dot(normalize(vNormal), lightDir), 0.0);
+            float ambient = 0.25;
+            color = waterColor * (ambient + diff);
             
-                gl_FragColor = vec4(color, 1.0);
-            }
-        """
-
+            vec3 viewDir = normalize(-vWorldPos);
+            vec3 halfVec = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(normalize(vNormal), halfVec), 0.0), 32.0);
+            color += vec3(0.3, 0.5, 1.0) * spec * 0.4;
+    
+        } else if (uEmissive > 0.5) {
+            vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
+            color = texColor;
+        } else {
+            vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
+            vec3 lightDir = normalize(uLightPos - vWorldPos);
+            float diff = max(dot(normalize(vNormal), lightDir), 0.0);
+            float ambient = 0.25;
+            color = texColor * (ambient + diff);
+        }
+    
+        gl_FragColor = vec4(color, 1.0);
+    }
+"""
     }
 }
