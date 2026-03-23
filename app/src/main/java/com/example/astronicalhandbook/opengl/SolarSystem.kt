@@ -19,6 +19,8 @@ class SolarSystem(context: Context) {
     }
     private val planetPositions = mutableMapOf<PlanetId, FloatArray>()
     private val sphereMesh = SphereMesh(stacks = 16, slices = 16)
+    private val oceanMesh = OceanMesh(stacks = 32, slices = 32)
+    private var totalTime = 0f
 
     private val modelMatrix = FloatArray(16)
     private val mvpMatrix = FloatArray(16)
@@ -91,6 +93,7 @@ class SolarSystem(context: Context) {
 
     fun draw(vpMatrix: FloatArray, deltaTime: Float) {
         deltaTime.coerceAtMost(0.05f)
+        totalTime += deltaTime
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         drawPlanet(PlanetId.SUN, sunState, vpMatrix, 0f, 0f, 0f, deltaTime)
@@ -159,13 +162,17 @@ class SolarSystem(context: Context) {
 
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, modelMatrix, 0)
 
-        val emissive = currentPlanetId == PlanetId.SUN
-        sphereMesh.draw(
-            mvpMatrix = mvpMatrix,
-            modelMatrix = modelMatrix,
-            textureId = state.planet.textureId,
-            emissive
-        )
+        if (currentPlanetId == PlanetId.NEPTUNE) {
+            oceanMesh.draw(mvpMatrix, modelMatrix, totalTime)
+        } else {
+            val emissive = currentPlanetId == PlanetId.SUN
+            sphereMesh.draw(
+                mvpMatrix = mvpMatrix,
+                modelMatrix = modelMatrix,
+                textureId = state.planet.textureId,
+                emissive
+            )
+        }
         planetPositions[currentPlanetId] = floatArrayOf(x, y, z)
     }
 

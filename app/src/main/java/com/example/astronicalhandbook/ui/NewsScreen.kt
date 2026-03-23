@@ -52,7 +52,7 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel()) {
                 .padding(16.dp)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            Text("К Заданию 2 (Куб)")
+            Text("Куб")
         }
     }
 }
