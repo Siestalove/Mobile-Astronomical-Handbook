@@ -29,6 +29,8 @@ class SphereMesh(
     private val uTexture: Int
     private val uLightPos: Int
     private val uEmissive: Int
+    private val uWater: Int
+    private val uTime: Int
 
 
     init {
@@ -132,13 +134,17 @@ class SphereMesh(
         uTexture = GLES20.glGetUniformLocation(program, "uTexture")
         uLightPos = GLES20.glGetUniformLocation(program, "uLightPos")
         uEmissive = GLES20.glGetUniformLocation(program, "uEmissive")
+        uWater = GLES20.glGetUniformLocation(program, "uWater")
+        uTime  = GLES20.glGetUniformLocation(program, "uTime")
     }
 
     fun draw(
         mvpMatrix: FloatArray,
         modelMatrix: FloatArray,
         textureId: Int,
-        emissive: Boolean
+        emissive: Boolean,
+        water: Boolean = false,
+        time: Float = 0f
     ) {
         GLES20.glUseProgram(program)
 
@@ -164,8 +170,10 @@ class SphereMesh(
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
         GLES20.glUniform1i(uTexture, 0)
 
-        GLES20.glUniform3f(uLightPos, 0f, 1f, 0f)
+        GLES20.glUniform3f(uLightPos, 0f, 0f, 0f)
         GLES20.glUniform1f(uEmissive, if (emissive) 1f else 0f)
+        GLES20.glUniform1f(uWater,    if (water)    1f else 0f)
+        GLES20.glUniform1f(uTime, time)
 
         GLES20.glDrawElements(
             GLES20.GL_TRIANGLES,
@@ -228,29 +236,43 @@ class SphereMesh(
         if (uWater > 0.5) {
             vec2 uv = vTexCoordinate;
             
-            float w  = wave(uv, 1.2, 8.0,  0.04);
-                  w += wave(uv, 0.7, 14.0, 0.025);
-                  w += wave(uv, 1.8, 20.0, 0.015);
-                  w += wave(uv, 0.4, 5.0,  0.05);
+            float w = wave(uv, 1.2, 3.5, 0.55);
+            w += wave(uv.yx * 0.8, 0.9, 4.2, 0.25);
             
-            vec3 deepBlue  = vec3(0.05, 0.10, 0.45);
-            vec3 lightBlue = vec3(0.20, 0.45, 0.85);
-            vec3 foam      = vec3(0.70, 0.80, 1.00);
+            float t = clamp(w * 0.65 + 0.5, 0.0, 1.0);
             
-            float t = clamp(w * 8.0 + 0.5, 0.0, 1.0);
-            vec3 waterColor = mix(deepBlue, lightBlue, t);
-            waterColor = mix(waterColor, foam, clamp((w - 0.04) * 15.0, 0.0, 1.0));
+            float bands = 4.0;
+            float toon = floor(t * bands) / bands;
+            
+            vec3 deepBlue  = vec3(0.01, 0.04, 0.38);
+            vec3 midBlue   = vec3(0.08, 0.28, 0.78);
+            vec3 lightBlue = vec3(0.30, 0.65, 0.95);
+            vec3 foam      = vec3(0.95, 0.98, 1.00);
+        
+            vec3 waterColor;
+            if (toon < 0.25) {
+                waterColor = deepBlue;
+            } else if (toon < 0.50) {
+                waterColor = midBlue;
+            } else if (toon < 0.75) {
+                waterColor = lightBlue;
+            } else {
+                waterColor = foam;
+            }
             
             vec3 lightDir = normalize(uLightPos - vWorldPos);
-            float diff = max(dot(normalize(vNormal), lightDir), 0.0);
-            float ambient = 0.25;
-            color = waterColor * (ambient + diff);
+            vec3 norm = normalize(vNormal);
+            float diff = max(dot(norm, lightDir), 0.0);
+
+            float toonDiff = diff > 0.5 ? 1.0 : 0.55;
+            float ambient = 0.5;
             
             vec3 viewDir = normalize(-vWorldPos);
-            vec3 halfVec = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(normalize(vNormal), halfVec), 0.0), 32.0);
-            color += vec3(0.3, 0.5, 1.0) * spec * 0.4;
-    
+            vec3 halfDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(norm, halfDir), 0.0), 16.0);
+            float toonSpec = spec > 0.6 ? 0.7 : 0.0;
+            
+            color = waterColor * (ambient + toonDiff * 0.8) + vec3(toonSpec);
         } else if (uEmissive > 0.5) {
             vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
             color = texColor;
@@ -258,7 +280,7 @@ class SphereMesh(
             vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
             vec3 lightDir = normalize(uLightPos - vWorldPos);
             float diff = max(dot(normalize(vNormal), lightDir), 0.0);
-            float ambient = 0.25;
+            float ambient = 0.45;
             color = texColor * (ambient + diff);
         }
     

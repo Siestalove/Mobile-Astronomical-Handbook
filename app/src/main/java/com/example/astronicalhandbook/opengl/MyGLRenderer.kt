@@ -12,7 +12,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private lateinit var background: Square
     private lateinit var solarSystem: SolarSystem
-    private lateinit var selectionCube: SelectionCube
+    lateinit var selectionCube: SelectionCube
 
     private var textureId: Int = 0
     private var lastFrameTimeNs = 0L

@@ -31,6 +31,7 @@ class OpenGLActivity : Activity() {
 
         findViewById<Button>(R.id.btn_left).setOnClickListener {
             gLView.queueEvent {
+                gLView.renderer.selectionCube.reset()
                 gLView.renderer.selectPrevious()
                 val name = gLView.renderer.getSelectedPlanetName()
                 runOnUiThread { updatePlanetInfoUI(name) }
@@ -39,6 +40,7 @@ class OpenGLActivity : Activity() {
 
         findViewById<Button>(R.id.btn_right).setOnClickListener {
             gLView.queueEvent {
+                gLView.renderer.selectionCube.reset()
                 gLView.renderer.selectNext()
                 val name = gLView.renderer.getSelectedPlanetName()
                 runOnUiThread { updatePlanetInfoUI(name) }
