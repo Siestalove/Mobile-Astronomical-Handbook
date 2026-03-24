@@ -34,7 +34,6 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_CULL_FACE)
         GLES20.glCullFace(GLES20.GL_BACK)
 
-
         background = Square()
         solarSystem = SolarSystem(context)
         selectionCube = SelectionCube()
@@ -45,8 +44,9 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         val now = System.nanoTime()
-        val deltaTime = (now - lastFrameTimeNs) * 1e-9f
+        var deltaTime = if (lastFrameTimeNs == 0L) 0f else (now - lastFrameTimeNs) * 1e-9f
         lastFrameTimeNs = now
+        if (deltaTime > 0.1f) deltaTime = 0.05f
 
         val selectedPlanet = planets[selectedPlanetIndex]
         val planetPos = solarSystem.getPlanetPosition(selectedPlanet)
@@ -57,7 +57,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        
+
         background.draw(textureId)
 
         GLES20.glDisable(GLES20.GL_BLEND)
@@ -101,6 +101,10 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     fun toggleFocus() {
         camera.followPlanet = !camera.followPlanet
+    }
+
+    fun rotateCameraBy(deltaAngle: Float) {
+        camera.rotateOrbitBy(deltaAngle)
     }
 
     fun getSelectedPlanetName(): String {

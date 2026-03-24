@@ -225,54 +225,39 @@ class SphereMesh(
     varying vec2 vTexCoordinate;
     varying float vTime;
     
-    float wave(vec2 uv, float speed, float freq, float amp) {
-        return sin(uv.x * freq + vTime * speed) * 
-               cos(uv.y * freq * 0.7 + vTime * speed * 0.8) * amp;
-    }
-    
     void main() {
         vec3 color;
-    
+
         if (uWater > 0.5) {
             vec2 uv = vTexCoordinate;
-            
-            float w = wave(uv, 1.2, 3.5, 0.55);
-            w += wave(uv.yx * 0.8, 0.9, 4.2, 0.25);
-            
-            float t = clamp(w * 0.65 + 0.5, 0.0, 1.0);
-            
-            float bands = 4.0;
-            float toon = floor(t * bands) / bands;
-            
-            vec3 deepBlue  = vec3(0.01, 0.04, 0.38);
-            vec3 midBlue   = vec3(0.08, 0.28, 0.78);
-            vec3 lightBlue = vec3(0.30, 0.65, 0.95);
-            vec3 foam      = vec3(0.95, 0.98, 1.00);
-        
-            vec3 waterColor;
-            if (toon < 0.25) {
-                waterColor = deepBlue;
-            } else if (toon < 0.50) {
-                waterColor = midBlue;
-            } else if (toon < 0.75) {
-                waterColor = lightBlue;
-            } else {
-                waterColor = foam;
-            }
-            
+
+            float w = 0.0;
+            w += sin(uv.x *  8.0 + vTime * 1.10) * 0.25;
+            w += sin(uv.y *  6.5 + vTime * 0.85) * 0.20;
+            w += sin((uv.x + uv.y) * 5.5 + vTime * 1.30) * 0.18;
+            w += sin((uv.x - uv.y) * 7.0 + vTime * 0.95) * 0.15;
+            w += sin(uv.x * 12.0 + uv.y * 5.0 + vTime * 1.70) * 0.10;
+
+            float t = clamp(w * 0.57 + 0.5, 0.0, 1.0);
+
+            vec3 deep    = vec3(0.01, 0.06, 0.30);
+            vec3 mid     = vec3(0.04, 0.30, 0.65);
+            vec3 crest   = vec3(0.14, 0.58, 0.88);
+            vec3 waterColor = mix(deep, mix(mid, crest, smoothstep(0.45, 0.75, t)), t);
+
+            float foam = smoothstep(0.78, 0.94, t);
+            waterColor = mix(waterColor, vec3(0.90, 0.96, 1.00), foam);
+
             vec3 lightDir = normalize(uLightPos - vWorldPos);
             vec3 norm = normalize(vNormal);
             float diff = max(dot(norm, lightDir), 0.0);
 
-            float toonDiff = diff > 0.5 ? 1.0 : 0.55;
-            float ambient = 0.5;
-            
             vec3 viewDir = normalize(-vWorldPos);
             vec3 halfDir = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(norm, halfDir), 0.0), 16.0);
-            float toonSpec = spec > 0.6 ? 0.7 : 0.0;
-            
-            color = waterColor * (ambient + toonDiff * 0.8) + vec3(toonSpec);
+            float spec = pow(max(dot(norm, halfDir), 0.0), 48.0);
+
+            float ambient = 0.45;
+            color = waterColor * (ambient + diff * 0.65) + vec3(spec * 0.35);
         } else if (uEmissive > 0.5) {
             vec3 texColor = texture2D(uTexture, vTexCoordinate).rgb;
             color = texColor;

@@ -1,6 +1,9 @@
 package com.example.astronicalhandbook.opengl
 
 import android.opengl.Matrix
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 class CameraController {
@@ -13,17 +16,26 @@ class CameraController {
     private var targetY = 0f
     private var targetZ = 0f
 
+    private var orbitAngle: Float = 0f
+
     var followPlanet: Boolean = false
+        set(value) {
+            if (value && !field) {
+                orbitAngle = atan2(eyeZ - targetZ, eyeX - targetX)
+            }
+            field = value
+        }
+
+    fun rotateOrbitBy(deltaAngle: Float) {
+        orbitAngle += deltaAngle
+    }
 
     fun update(target: FloatArray?, deltaTime: Float) {
         if (followPlanet && target != null) {
             val followDistance = 2.6f
-            val dx = eyeX - target[0]
-            val dz = eyeZ - target[2]
-            val len = sqrt(dx * dx + dz * dz).coerceAtLeast(0.001f)
 
-            val desiredX = target[0] + (dx / len) * followDistance
-            val desiredZ = target[2] + (dz / len) * followDistance
+            val desiredX = target[0] + cos(orbitAngle) * followDistance
+            val desiredZ = target[2] + sin(orbitAngle) * followDistance
 
             eyeX += (desiredX - eyeX) * deltaTime * 2f
             eyeZ += (desiredZ - eyeZ) * deltaTime * 2f
