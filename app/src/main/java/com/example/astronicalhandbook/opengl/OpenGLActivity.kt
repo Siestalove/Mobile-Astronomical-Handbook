@@ -2,8 +2,8 @@ package com.example.astronicalhandbook.opengl
 
 import android.app.Activity
 import android.os.Bundle
-
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import com.example.astronicalhandbook.R
 import androidx.core.view.isVisible
@@ -12,7 +12,7 @@ class OpenGLActivity : Activity() {
     private lateinit var gLView: MyGLSurfaceView
     private lateinit var planetInfo: TextView
     private lateinit var planetDesc: TextView
-    private lateinit var planetImage: android.widget.ImageView
+    private lateinit var planetImage: ImageView
     private lateinit var cardPlanetInfo: androidx.cardview.widget.CardView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +63,10 @@ class OpenGLActivity : Activity() {
                         cardPlanetInfo.visibility = android.view.View.GONE
                     } else {
                         if (name == "MOON") {
-                            val intent = android.content.Intent(this@OpenGLActivity, MoonPhongActivity::class.java)
+                            val intent = android.content.Intent(
+                                this@OpenGLActivity,
+                                MoonPhongActivity::class.java
+                            )
                             startActivity(intent)
                         } else {
                             cardPlanetInfo.visibility = android.view.View.VISIBLE
@@ -73,8 +76,7 @@ class OpenGLActivity : Activity() {
                 }
             }
         }
-        
-        // Initial setup
+
         gLView.queueEvent {
             val name = gLView.renderer.getSelectedPlanetName()
             runOnUiThread { updatePlanetInfoUI(name) }

@@ -7,15 +7,21 @@ import android.opengl.Matrix
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import com.example.astronicalhandbook.R
+import kotlin.math.PI
+import kotlin.math.sin
 
 class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private lateinit var background: Square
     private lateinit var solarSystem: SolarSystem
     lateinit var selectionCube: SelectionCube
+    private lateinit var blackHole: BlackHoleSprite
 
     private var textureId: Int = 0
     private var lastFrameTimeNs = 0L
+    private var bhTime = 0f
+    private var screenW = 1
+    private var screenH = 1
 
 
     private val vPMatrix = FloatArray(16)
@@ -37,6 +43,7 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         background = Square()
         solarSystem = SolarSystem(context)
         selectionCube = SelectionCube()
+        blackHole = BlackHoleSprite(context)
         textureId = ShaderUtils.loadTexture(context, R.drawable.galaxy_texture)
     }
 
@@ -59,6 +66,14 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
         background.draw(textureId)
+        GLES20.glEnable(GLES20.GL_BLEND)
+
+        bhTime += deltaTime
+        val bhProgress = (bhTime % 9f) / 9f
+        val bhSize = screenW / 3f
+        val bhCx = (-bhSize / 2f) + (screenW + bhSize) * bhProgress
+        val bhCy = screenH / 2f + screenH * 0.20f * sin(bhProgress * 4.0 * PI).toFloat()
+        blackHole.draw(bhCx, bhCy, bhSize, screenW, screenH)
 
         GLES20.glDisable(GLES20.GL_BLEND)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
@@ -84,6 +99,8 @@ class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
+        screenW = width
+        screenH = height
 
         val ratio: Float = width.toFloat() / height.toFloat()
 
